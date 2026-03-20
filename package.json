@@ -1,0 +1,15 @@
+{
+  "name": "claude-session-search",
+  "version": "2.0.0",
+  "description": "Interactive Claude Code session search with content matching — enhanced /resume",
+  "type": "module",
+  "bin": {
+    "smart-resume": "./bin/smart-resume.js"
+  },
+  "scripts": {
+    "start": "node bin/smart-resume.js"
+  },
+  "dependencies": {
+    "fuse.js": "^7.0.0"
+  }
+}
