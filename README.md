@@ -1,16 +1,18 @@
 # sss — smart-session-search
 
-**Search and resume Claude Code sessions by keyword.**
+**Search and resume [Claude Code](https://docs.anthropic.com/en/docs/claude-code) sessions by keyword.**
 
-The built-in `/resume` only matches session titles. `sss` searches both titles and message content, with a full-screen TUI, preview pane, keyword highlighting, and cross-project resume.
+## Why
 
-Zero dependencies. Works with any terminal.
+Claude Code's built-in `/resume` command only searches session **titles**. If the title doesn't contain the keyword you're looking for, you won't find it — even if the conversation is exactly what you need.
 
-## The Problem
+This becomes a real problem once you have dozens or hundreds of sessions. You remember discussing "docker compose" or "auth middleware" with Claude, but you can't locate the session because the title was something generic like "help me fix this bug".
 
-You've had hundreds of Claude Code sessions. You remember discussing something — maybe "docker compose" or "auth middleware" — but you can't find it. The built-in `/resume` only searches titles, so if the title doesn't match, you're stuck scrolling.
+## What sss Does
 
-## The Solution
+`sss` searches both session **titles** and **message content**. It provides a split-pane TUI with live preview, keyword highlighting, and one-key resume.
+
+Select a session and press **Enter** — `sss` automatically switches to the correct project directory and runs `claude --resume`. No manual `cd` required, even for sessions from other projects.
 
 ![sss demo](assets/demo.png)
 
@@ -26,61 +28,47 @@ Requires Node.js >= 18 and [Claude Code](https://docs.anthropic.com/en/docs/clau
 
 ```bash
 sss                  # Search current project sessions
-sss -g               # Search ALL projects
+sss -g               # Search ALL projects (global)
 sss docker           # Pre-fill search with "docker"
 sss -g auth          # Global search for "auth"
 ```
-
-## Features
-
-### Search Titles + Message Content
-Searches across session titles, user messages, and project paths. Finds sessions even when the title doesn't mention what you're looking for.
-
-### Split-Pane TUI
-- **Left pane**: Session list with title, relative time, file size, and project path
-- **Right pane**: Live preview of the selected session's conversation
-- Match snippets shown inline when the keyword is found in messages but not the title
-
-### Keyword Highlighting
-Matched keywords are highlighted in both the session list and the preview pane. When searching, the preview filters to only show messages containing the keyword.
-
-### Cross-Project Resume
-Select any session and press Enter — `sss` automatically `cd`s to the correct project directory and runs `claude --resume`. No need to manually switch directories.
-
-### Global Search
-Press `Tab` to toggle between current project and all projects. Find that session from last week, even if you don't remember which project it was in.
-
-### Preview Navigation
-Press `→` to focus the preview pane, then `↑`/`↓` to jump between keyword matches. Press `←` or `Esc` to go back to the session list.
-
-### Session File Expiration Guidance
-When a session file has been cleaned up by Claude Code (default: 30 days), the preview shows a clear message with instructions to extend the retention period.
 
 ## Keyboard Shortcuts
 
 | Key | Action |
 |-----|--------|
-| Type | Search sessions in real-time |
+| Type | Real-time search across titles and messages |
 | `↑` `↓` | Navigate session list |
-| `Enter` | Resume selected session |
-| `Tab` | Toggle current project / global scope |
-| `→` | Focus preview pane |
-| `←` `Esc` | Back to session list (or quit) |
+| `Enter` | Auto `cd` to project directory and resume session |
+| `Tab` | Toggle between current project and global scope |
+| `→` | Focus preview pane, jump to first match |
+| `↑` `↓` (in preview) | Jump between keyword matches |
+| `←` / `Esc` | Back to session list |
 | `Ctrl+C` | Quit |
+
+## Features
+
+- **Search message content** — finds sessions even when the title doesn't match
+- **Split-pane TUI** — session list on the left, conversation preview on the right
+- **Keyword highlighting** — matched terms highlighted in both panes
+- **Filtered preview** — when searching, preview only shows messages containing the keyword
+- **Cross-project resume** — auto `cd` + `claude --resume`, works across any project
+- **Global search** — press `Tab` to search all projects, not just the current one
+- **Match snippets** — when the match is in messages (not title), a snippet is shown inline
+- **Session expiration guidance** — shows config instructions when session files have been cleaned up
+- **Zero dependencies** — pure Node.js, no external packages
 
 ## How It Works
 
-`sss` reads from Claude Code's local data:
+Everything is local. `sss` reads from Claude Code's data files:
 
-- **`~/.claude/history.jsonl`** — session index with titles, project paths, and timestamps
-- **`~/.claude/projects/<path>/<session-id>.jsonl`** — full session conversations
+- `~/.claude/history.jsonl` — session index (titles, timestamps, project paths)
+- `~/.claude/projects/<path>/<session-id>.jsonl` — full session conversations
 
-Search is case-insensitive exact (substring) matching. No external services, no network requests, everything stays local.
+No network requests, no external services.
 
-## CJK / Emoji Support
-
-Terminal column widths are calculated correctly for CJK characters, emoji, and fullwidth symbols. Ambiguous-width characters (like `·`, `—`, `…`) are treated as 2 columns wide for CJK terminal compatibility.
+> **Tip:** Claude Code cleans up session files after 30 days by default. To keep them longer, add `{ "cleanupPeriodDays": 99999 }` to `~/.claude/settings.json`.
 
 ## License
 
-MIT
+[MIT](LICENSE)
