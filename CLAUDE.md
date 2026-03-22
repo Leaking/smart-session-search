@@ -4,13 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-**smart-session-search (sss)** — An enhanced Claude Code session search tool. Searches both session **titles** and **message content** (unlike built-in `/resume` which only matches titles). Uses case-insensitive exact (substring) matching. Zero dependencies.
+**smart-session-search (sss)** — An enhanced Claude Code session search tool. Searches both session **titles** and **message content** (unlike built-in `/resume` which only matches titles). Uses case-insensitive exact (substring) matching.
 
 ## Commands
 
 ```bash
+npm run build         # Compile TypeScript to dist/
 npm link              # Install as global `sss` command
-node bin/sss.js       # Run directly
+node dist/cli.js      # Run directly
 sss                   # TUI mode, search current project
 sss -g                # TUI mode, search all projects
 sss -g keyword        # TUI mode, global + pre-fill search
@@ -19,18 +20,20 @@ sss --help            # Show help
 
 ## Architecture
 
-### `bin/sss.js` — Entry point
+Written in TypeScript. Source in `src/`, compiled ESM output in `dist/`. Zero runtime dependencies; `typescript` and `@types/node` are dev-only.
+
+### `src/cli.ts` — Entry point
 - **TTY mode** (terminal): Full-screen interactive TUI with real-time search, arrow key navigation, preview pane, auto resume
 - **Non-TTY mode** (Claude Code Bash): Prints search results as text, accepts keyword as CLI arg
 
-### `lib/` modules
+### `src/` modules
 | Module | Responsibility |
 |--------|---------------|
-| `data.js` | Load sessions from `~/.claude/history.jsonl`, aggregate by sessionId, load preview messages from session `.jsonl` files |
-| `search.js` | Case-insensitive substring search across title, messages, project |
-| `tui.js` | Full-screen TUI: left pane (session list) + right pane (preview), keyboard navigation |
-| `preview.js` | Preview pane data: session metadata header, filtered message display with keyword highlighting |
-| `resume.js` | `spawnSync` to launch `claude --resume` with correct `cwd` |
+| `data.ts` | Load sessions from `~/.claude/history.jsonl`, aggregate by sessionId, load preview messages from session `.jsonl` files |
+| `search.ts` | Case-insensitive substring search across title, messages, project |
+| `tui.ts` | Full-screen TUI: left pane (session list) + right pane (preview), keyboard navigation |
+| `preview.ts` | Preview pane data: session metadata header, filtered message display with keyword highlighting |
+| `resume.ts` | `spawnSync` to launch `claude --resume` with correct `cwd` |
 
 ### Data sources
 - `~/.claude/history.jsonl` — session index (titles, project paths, timestamps)

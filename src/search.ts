@@ -1,41 +1,45 @@
+import type { Session } from './data.js';
+
+export interface SearchMatch {
+  key: 'title' | 'messages' | 'project';
+  value: string;
+  indices: [number, number][];
+}
+
+export interface SearchResult {
+  item: Session;
+  matches: SearchMatch[];
+}
+
 /**
  * Search sessions using case-insensitive exact (substring) matching.
- * No external dependencies needed.
  *
- * When query is empty, returns all sessions.
+ * When query is empty, returns all sessions in original order.
  * Matches against title, messages, and project fields.
- *
- * @param {any} _unused - kept for API compatibility (was Fuse index)
- * @param {string} query
- * @param {import('./data.js').Session[]} allSessions
- * @returns {{item: Session, matches: object[]}[]}
  */
-export function search(_unused, query, allSessions = []) {
+export function search(query: string, sessions: Session[]): SearchResult[] {
   if (!query.trim()) {
-    return allSessions.map(item => ({ item, matches: [] }));
+    return sessions.map(item => ({ item, matches: [] }));
   }
 
   const q = query.toLowerCase();
-  const results = [];
+  const results: SearchResult[] = [];
 
-  for (const session of allSessions) {
-    const matches = [];
+  for (const session of sessions) {
+    const matches: SearchMatch[] = [];
 
-    // Match title
-    if (session.title && session.title.toLowerCase().includes(q)) {
+    if (session.title?.toLowerCase().includes(q)) {
       matches.push({ key: 'title', value: session.title, indices: findIndices(session.title, q) });
     }
 
-    // Match messages
     for (const msg of session.messages) {
       if (msg.toLowerCase().includes(q)) {
         matches.push({ key: 'messages', value: msg, indices: findIndices(msg, q) });
-        break; // one match is enough per session
+        break;
       }
     }
 
-    // Match project
-    if (session.project && session.project.toLowerCase().includes(q)) {
+    if (session.project?.toLowerCase().includes(q)) {
       matches.push({ key: 'project', value: session.project, indices: findIndices(session.project, q) });
     }
 
@@ -49,10 +53,9 @@ export function search(_unused, query, allSessions = []) {
 
 /**
  * Find all occurrence indices of needle in haystack (case-insensitive).
- * Returns [[start, end], ...] format compatible with Fuse.js match indices.
  */
-function findIndices(haystack, needle) {
-  const indices = [];
+function findIndices(haystack: string, needle: string): [number, number][] {
+  const indices: [number, number][] = [];
   const lower = haystack.toLowerCase();
   let pos = 0;
   while ((pos = lower.indexOf(needle, pos)) !== -1) {
@@ -60,11 +63,4 @@ function findIndices(haystack, needle) {
     pos += needle.length;
   }
   return indices;
-}
-
-/**
- * Create index — no-op, kept for API compatibility.
- */
-export function createIndex(_sessions) {
-  return null;
 }

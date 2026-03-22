@@ -7,35 +7,76 @@ const HISTORY_FILE = join(CLAUDE_DIR, 'history.jsonl');
 const PROJECTS_DIR = join(CLAUDE_DIR, 'projects');
 const MAX_MSG_LENGTH = 2000;
 
+// ── Types ──
+
+export interface Session {
+  sessionId: string;
+  title: string;
+  project: string;
+  timestamp: number;
+  messages: string[];
+  fileSize: number; // bytes, -1 if file not found
+}
+
+export interface PreviewMessage {
+  role: 'user' | 'assistant';
+  text: string;
+}
+
+interface HistoryEntry {
+  sessionId?: string;
+  display?: string;
+  project?: string;
+  timestamp?: number;
+}
+
+interface SessionData {
+  title: string;
+  project: string;
+  timestamp: number;
+  messages: string[];
+}
+
+interface ContentBlock {
+  type: string;
+  text?: string;
+}
+
+interface SessionFileEntry {
+  type?: string;
+  message?: {
+    content?: string | ContentBlock[];
+  };
+}
+
+export interface LoadSessionsOptions {
+  projectDir?: string | null;
+  includeAssistant?: boolean;
+}
+
 /**
  * Encode a project path to the directory name format used by Claude.
- * /Users/foo/bar → -Users-foo-bar
+ * /Users/foo/bar -> -Users-foo-bar
  */
-export function encodeProjectPath(projectPath) {
+export function encodeProjectPath(projectPath: string): string {
   return projectPath.replace(/\//g, '-');
 }
 
 /**
  * Load sessions from history.jsonl.
  * Aggregates multiple entries per sessionId into one Session object.
- *
- * @param {object} options
- * @param {string|null} options.projectDir - Filter to this project dir (null = global)
- * @param {boolean} options.includeAssistant - Also parse session .jsonl files for assistant messages
- * @returns {Session[]}
  */
-export function loadSessions({ projectDir = null, includeAssistant = false } = {}) {
+export function loadSessions({ projectDir = null, includeAssistant = false }: LoadSessionsOptions = {}): Session[] {
   if (!existsSync(HISTORY_FILE)) return [];
 
   const raw = readFileSync(HISTORY_FILE, 'utf-8');
   const lines = raw.split('\n').filter(Boolean);
 
   // Aggregate by sessionId
-  /** @type {Map<string, {title: string, project: string, timestamp: number, messages: string[]}>} */
-  const sessionMap = new Map();
+  const sessionMap = new Map<string, SessionData>();
 
   for (const line of lines) {
-    let entry;
+    let entry: HistoryEntry;
     try {
       entry = JSON.parse(line);
     } catch {
@@ -60,7 +101,7 @@ export function loadSessions({ projectDir = null, includeAssistant = false } = {
       });
     }
 
-    const session = sessionMap.get(sessionId);
+    const session = sessionMap.get(sessionId)!;
 
     // First display becomes the title; collect all as messages
     if (display) {
@@ -75,7 +116,7 @@ export function loadSessions({ projectDir = null, includeAssistant = false } = {
   }
 
   // Build Session array with file size info
-  let sessions = Array.from(sessionMap.entries()).map(([sessionId, data]) => {
+  let sessions: Session[] = Array.from(sessionMap.entries()).map(([sessionId, data]) => {
     const fileSize = getSessionFileSize(sessionId, data.project);
     return {
       sessionId,
@@ -83,7 +124,7 @@ export function loadSessions({ projectDir = null, includeAssistant = false } = {
       project: data.project,
       timestamp: data.timestamp,
       messages: data.messages,
-      fileSize, // bytes, -1 if file not found
+      fileSize,
     };
   });
 
@@ -105,7 +146,7 @@ export function loadSessions({ projectDir = null, includeAssistant = false } = {
  * Get the file size of a session's .jsonl file.
  * Returns -1 if the file doesn't exist.
  */
-function getSessionFileSize(sessionId, projectPath) {
+function getSessionFileSize(sessionId: string, projectPath: string): number {
   if (!projectPath) return -1;
   const encodedPath = encodeProjectPath(projectPath);
   const sessionFile = join(PROJECTS_DIR, encodedPath, `${sessionId}.jsonl`);
@@ -119,8 +160,8 @@ function getSessionFileSize(sessionId, projectPath) {
 /**
  * Load assistant text messages from a session's .jsonl file + subagents.
  */
-function loadAssistantMessages(sessionId, projectPath) {
-  const messages = [];
+function loadAssistantMessages(sessionId: string, projectPath: string): string[] {
+  const messages: string[] = [];
   if (!projectPath) return messages;
 
   const encodedPath = encodeProjectPath(projectPath);
@@ -136,7 +177,7 @@ function loadAssistantMessages(sessionId, projectPath) {
   const subagentDir = join(projectDir, sessionId, 'subagents');
   if (existsSync(subagentDir)) {
     try {
-      const files = readdirSync(subagentDir).filter(f => f.startsWith('agent-') && f.endsWith('.jsonl'));
+      const files = readdirSync(subagentDir).filter((f: string) => f.startsWith('agent-') && f.endsWith('.jsonl'));
       for (const file of files) {
         messages.push(...extractAssistantText(join(subagentDir, file)));
       }
@@ -151,9 +192,9 @@ function loadAssistantMessages(sessionId, projectPath) {
 /**
  * Extract text blocks from assistant messages in a .jsonl file.
  */
-function extractAssistantText(filePath) {
-  const texts = [];
-  let raw;
+function extractAssistantText(filePath: string): string[] {
+  const texts: string[] = [];
+  let raw: string;
   try {
     raw = readFileSync(filePath, 'utf-8');
   } catch {
@@ -162,7 +203,7 @@ function extractAssistantText(filePath) {
 
   for (const line of raw.split('\n')) {
     if (!line) continue;
-    let entry;
+    let entry: SessionFileEntry;
     try {
       entry = JSON.parse(line);
     } catch {
@@ -187,15 +228,10 @@ function extractAssistantText(filePath) {
 
 /**
  * Load preview messages (user + assistant alternating) for a session.
- * Returns the first N conversation turns for preview display.
- *
- * @param {string} sessionId
- * @param {string} projectPath
- * @param {number} maxMessages
- * @returns {{role: 'user'|'assistant', text: string}[]}
+ * Returns conversation turns for preview display.
  */
-export function loadPreviewMessages(sessionId, projectPath) {
-  const result = [];
+export function loadPreviewMessages(sessionId: string, projectPath: string): PreviewMessage[] {
+  const result: PreviewMessage[] = [];
   if (!projectPath) return result;
 
   const encodedPath = encodeProjectPath(projectPath);
@@ -203,7 +239,7 @@ export function loadPreviewMessages(sessionId, projectPath) {
 
   if (!existsSync(sessionFile)) return result;
 
-  let raw;
+  let raw: string;
   try {
     raw = readFileSync(sessionFile, 'utf-8');
   } catch {
@@ -213,7 +249,7 @@ export function loadPreviewMessages(sessionId, projectPath) {
   for (const line of raw.split('\n')) {
     if (!line) continue;
 
-    let entry;
+    let entry: SessionFileEntry;
     try {
       entry = JSON.parse(line);
     } catch {
@@ -250,7 +286,7 @@ export function loadPreviewMessages(sessionId, projectPath) {
 /**
  * Extract user message text (handles string and Array<{type, text}> formats).
  */
-function extractUserText(entry) {
+function extractUserText(entry: SessionFileEntry): string | null {
   const content = entry.message?.content;
   if (!content) return null;
 
@@ -259,7 +295,7 @@ function extractUserText(entry) {
   if (Array.isArray(content)) {
     const textParts = content
       .filter(b => b.type === 'text' && typeof b.text === 'string')
-      .map(b => b.text);
+      .map(b => b.text!);
     return textParts.join('\n') || null;
   }
 

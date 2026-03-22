@@ -1,16 +1,21 @@
 {
   "name": "smart-session-search",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Search & resume Claude Code sessions by keyword",
   "type": "module",
   "bin": {
-    "sss": "./bin/sss.js"
+    "sss": "./dist/cli.js"
   },
   "scripts": {
-    "start": "node bin/sss.js"
+    "build": "tsc && chmod +x dist/cli.js",
+    "start": "node dist/cli.js"
   },
   "license": "MIT",
   "engines": {
     "node": ">=18"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "typescript": "^5.9.3"
   }
 }

@@ -3,11 +3,8 @@ import { spawnSync } from 'node:child_process';
 /**
  * Resume a Claude Code session.
  * Uses spawnSync with cwd to handle cross-project resume.
- *
- * @param {string} sessionId
- * @param {string} projectDir - The project directory where this session belongs
  */
-export function resumeSession(sessionId, projectDir) {
+export function resumeSession(sessionId: string, projectDir: string): void {
   // Restore terminal state
   if (process.stdin.isTTY && process.stdin.setRawMode) {
     process.stdin.setRawMode(false);

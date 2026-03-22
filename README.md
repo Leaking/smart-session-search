@@ -56,7 +56,6 @@ sss -g auth          # Global search for "auth"
 - **Global search** — press `Tab` to search all projects, not just the current one
 - **Match snippets** — when the match is in messages (not title), a snippet is shown inline
 - **Session expiration guidance** — shows config instructions when session files have been cleaned up
-- **Zero dependencies** — pure Node.js, no external packages
 
 ## How It Works
 
