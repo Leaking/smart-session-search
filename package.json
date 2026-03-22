@@ -1,15 +1,16 @@
 {
-  "name": "claude-session-search",
-  "version": "2.0.0",
-  "description": "Interactive Claude Code session search with content matching — enhanced /resume",
+  "name": "smart-session-search",
+  "version": "0.1.0",
+  "description": "Search & resume Claude Code sessions by keyword",
   "type": "module",
   "bin": {
-    "smart-resume": "./bin/smart-resume.js"
+    "sss": "./bin/sss.js"
   },
   "scripts": {
-    "start": "node bin/smart-resume.js"
+    "start": "node bin/sss.js"
   },
-  "dependencies": {
-    "fuse.js": "^7.0.0"
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
   }
 }
