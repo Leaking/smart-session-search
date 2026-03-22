@@ -12,22 +12,7 @@ You've had hundreds of Claude Code sessions. You remember discussing something �
 
 ## The Solution
 
-```
- sss — smart-session-search ──────────────────────── [Global] ─
- Resume Session (3 of 125)
- ❯ Deploy to production                  │ 👤 help me set up the docker
-   2 hours ago - 689.1KB - …/my-project  │    compose file for deploying
-                                          │
-   Fix auth middleware                    │ 🤖 I'll help you set up Docker
-   1 day ago - 24.5KB - …/backend        │    Compose for deployment...
-   ↳ …check the JWT token validation     │
-                                          │
-   Database migration                     │
-   3 days ago - 5.8MB - …/my-project     │
- ─────────────────────────────────────────┴─────────────────────
- > docker▏
-                   Enter: resume · →: preview · Tab: scope · Esc: quit
-```
+![sss demo](assets/demo.png)
 
 ## Install
 
